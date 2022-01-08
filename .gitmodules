@@ -1,0 +1,3 @@
+[submodule "dbpinstaller"]
+	path = dbpinstaller
+	url = http://dev.pyra-handheld.com/bennr01/dbpinstaller.git
