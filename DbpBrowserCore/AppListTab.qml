@@ -152,13 +152,13 @@ import "../Style"
                 Layout.fillWidth: true
             }
             Image {
-                id: test
+                id: star
                 source: "qrc:/images/star.svg"
                 antialiasing: true
                 visible: false
             }
             ColorOverlay {
-                source:test
+                source:star
                 color:Material.foreground
                 antialiasing: true
                 visible: rect.ListView.isCurrentItem
@@ -172,13 +172,13 @@ import "../Style"
                 Layout.rightMargin: 20
             }
             Image {
-                id: test
+                id: arrow
                 source: "qrc:/images/arrow.svg"
                 antialiasing: true
                 visible: false
             }
             ColorOverlay {
-                source:test
+                source:arrow
                 color:Material.foreground
                 antialiasing: true
                 visible: rect.ListView.isCurrentItem
