@@ -1,3 +1,4 @@
+import re
 from PySide2.QtCore import QCoreApplication, QObject, Signal, Slot, QSortFilterProxyModel, QAbstractListModel, QModelIndex, Qt, QByteArray
 from pathlib import Path
 import urllib3
@@ -5,6 +6,8 @@ from types import FunctionType
 from AppEntry import AppEntry
 from ProcessRunnable import ProcessRunnable
 from typing import List, Union
+import configparser
+
 
 def download(url_file_list: list [(str, Path)], callback: FunctionType):
     http = urllib3.PoolManager()
@@ -43,10 +46,13 @@ class RepoQt(QObject):
     sources = ['opensource', 'proprietary', 'needdata']
     base_appFile = "_apps.ini"
     base_packagesFile = "_packages.ini"
+    details_file = 'details.ini'
+    readme_file = 'readme.txt'
     readmeChanged = Signal(str, arguments=['msg'])
-    detailsRefreshed = Signal(str, arguments=['msg'])
+    detailsRefreshed = Signal(object)
     repoRefreshed = Signal(object)
     repoRefreshFailed = Signal()
+    detailsRefreshFailed = Signal()
     downloadProgress = Signal(str,int,int,int, arguments=['name', 'chunk_number', 'chunk_size', 'total_size'])
     cacheUpdateProgress = Signal(str,int,int, arguments=['url', 'sources_processed', 'total_sources'])
     installedMd5sumMismatch = Signal(str,str, arguments=['package_id', 'path'])
@@ -60,22 +66,50 @@ class RepoQt(QObject):
 
 
     def change_readme(self):
-        self.readmeChanged.emit("New Readme")
+        file = self.ini_store / self.readme_file
+        with open(file) as f:
+            contents = f.read()
+        self.readmeChanged.emit(contents)
 
     def refresh_details(self):
         self.detailsRefreshed.emit("New Details")
 
-    @Slot(str)
-    def update_details(self, string):
-        print(string)    
+    def send_image_urls(self):
+        file = self.ini_store / self.details_file
+        details_config = configparser.ConfigParser()
+        details_config.read(file)
+        screenshots = details_config["screenshots"]
+        sections = list(screenshots.keys())
+        print("Image Sections: ")
+        print(sections)
+        ret = []
+        for section in sections:
+            if section.startswith("full"):
+                ret.append(self.baseUrl + screenshots[section])
 
-    def send_ini_names(self) -> list[AppEntry]:
+        self.detailsRefreshed.emit( ret )
+
+
+    @Slot(str, str)
+    def update_details(self, detail_url_path: str, readme_url_path: str):
+        print("details update called")
+        file_list = [(self.baseUrl + detail_url_path, self.ini_store / self.details_file)]
+        callback = lambda result : self.send_image_urls() if result else self.detailsRefreshFailed.emit()
+        download_threaded(file_list, callback)
+
+        file_list2 = [(self.baseUrl + readme_url_path, self.ini_store / self.readme_file)]
+        callback2 = lambda result : self.change_readme() if result else self.detailsRefreshFailed.emit()
+        download_threaded(file_list2, callback2)
+
+
+
+
+    def send_ini_names(self):
         ret = []
         for source in self.sources:
             appFile = self.ini_store / (source + self.base_appFile)
             packagesFile = self.ini_store / (source + self.base_packagesFile)
 
-            import configparser
             app_config = configparser.ConfigParser()
             app_config.read(appFile)
             packages_config = configparser.ConfigParser()
@@ -105,7 +139,6 @@ class RepoQt(QObject):
             file_list.append((self.baseUrl + f'/repo/dists/dbprepo/{source}/Apps', self.ini_store / (source + self.base_appFile)))
         callback = lambda result : self.send_ini_names() if result else self.repoRefreshFailed.emit()
         download_threaded(file_list, callback)
-        print("Download thread started.")
 
 
 from dbpinstaller.dbpinstaller.delegate import VoidInstallerDelegate

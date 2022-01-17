@@ -12,7 +12,7 @@ class AppListFilterModel(QSortFilterProxyModel):
         self.appList = ListModel()
         self.setSourceModel(self.appList)
         self.setFilterRole(int(ListModel.NameRole))
-        self.setSortRole(int(ListModel.NameRole))
+        self.setSortRole(int(ListModel.TimestampRole))
         self.appList.dataAdded.connect(self.addedData)
 
     @Slot(str)
@@ -32,6 +32,7 @@ class AppListFilterModel(QSortFilterProxyModel):
     @Slot()
     def addedData(self):
         self.filterUpdated.emit()
+        self.sort(0, Qt.DescendingOrder)
     
 
 
@@ -40,7 +41,8 @@ class ListModel(QAbstractListModel):
 
     NameRole = Qt.UserRole + 1
     IdRole = Qt.UserRole + 2
-    RawDataRole = Qt.UserRole + 3
+    TimestampRole = Qt.UserRole + 3
+    RawDataRole = Qt.UserRole + 4
     dataStore: list[AppEntry] = []
     dataAdded = Signal()
 
@@ -59,6 +61,8 @@ class ListModel(QAbstractListModel):
     def addData(self, input: Union[AppEntry, list[AppEntry]]):
         if isinstance(input, AppEntry):
             self.addDataRow(input)
+        elif input == None or len(input) == 0 :
+            return
         else:
             for unit in input:
                 self.addDataRow(unit)
@@ -67,7 +71,14 @@ class ListModel(QAbstractListModel):
     def resetDataSlot(self, values: list[AppEntry]):
         self.beginRemoveRows(QModelIndex(), 0, self.rowCount()-1)
         self.dataStore = []
+        self.endRemoveRows()
         self.addData(values)
+
+    @Slot()
+    def clearDataSlot(self):
+        self.beginRemoveRows(QModelIndex(), 0, self.rowCount()-1)
+        self.dataStore = []
+        self.endRemoveRows()
 
     def rowCount(self, parent: QModelIndex = QModelIndex()):
         return len(self.dataStore)
@@ -80,6 +91,8 @@ class ListModel(QAbstractListModel):
             return self.dataStore[index.row()].name
         if (role == self.IdRole):
             return self.dataStore[index.row()].id
+        if (role == self.TimestampRole):
+            return self.dataStore[index.row()].timestamp
         if (role == self.RawDataRole):
             return self.dataStore[index.row()]
 
@@ -89,5 +102,6 @@ class ListModel(QAbstractListModel):
         roles = {}
         roles[self.NameRole] = QByteArray(b"name")
         roles[self.IdRole] = QByteArray(b"id")
+        roles[self.TimestampRole] = QByteArray(b"timestamp")
         roles[self.RawDataRole] = QByteArray(b"rawdata")
         return roles

@@ -6,7 +6,7 @@ import QtQml.Models 2.15
 
     BaseMenu{
         id:toplevelmenu
-        ListModel{
+             model: ListModel{
             ListElement {
                 name: "Refresh"
             }
@@ -14,7 +14,23 @@ import QtQml.Models 2.15
                 name: "Exit"
             }
         }
-        onSelected: repo.refresh()
+            Keys.onDownPressed: {
+        console.log("Caught down key")
+        }
+        Component.onCompleted: {
+            console.log("connected the select function ")
+
+            this.onSelected.connect(this.select)
+        }
+        function select(name) {
+        console.log("selected " + name)
+        if (name == "Refresh"){
+            repo.refresh()
+        } else if (name =="Exit"){
+            Qt.callLater(Qt.quit)
+        }
+    }
+
     }
 
 

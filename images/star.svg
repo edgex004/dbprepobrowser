@@ -11,9 +11,9 @@
    sodipodi:docname="star.svg"
    id="svg8"
    version="1.1"
-   viewBox="0 0 210 297"
-   height="297mm"
-   width="210mm">
+   viewBox="0 0 86.617271 83.039383"
+   height="83.039383mm"
+   width="86.617271mm">
   <defs
      id="defs2" />
   <sodipodi:namedview
@@ -26,8 +26,8 @@
      inkscape:document-rotation="0"
      inkscape:current-layer="layer1"
      inkscape:document-units="mm"
-     inkscape:cy="538.1277"
-     inkscape:cx="175.01123"
+     inkscape:cy="142.30626"
+     inkscape:cx="251.70169"
      inkscape:zoom="0.80844537"
      inkscape:pageshadow="2"
      inkscape:pageopacity="0.0"
@@ -48,6 +48,7 @@
     </rdf:RDF>
   </metadata>
   <g
+     transform="translate(1.6956201e-5)"
      id="layer1"
      inkscape:groupmode="layer"
      inkscape:label="Layer 1">
@@ -69,7 +70,7 @@
        style="fill:none;fill-opacity:1;stroke-width:13.2292;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none"
        sodipodi:type="star" />
     <path
-       transform="rotate(19.340688,92.22619,108.10119)"
+       transform="rotate(19.340688,252.3487,-66.866541)"
        inkscape:transform-center-y="-3.6774105"
        inkscape:transform-center-x="0.0073169762"
        d="M 123.97618,130.0238 98.626437,126.30016 81.187832,145.07169 76.895722,119.81198 53.654114,109.0276 76.351191,97.139882 79.425692,71.703242 97.745367,89.615939 122.88712,84.679609 111.51223,107.63798 Z"
@@ -84,7 +85,7 @@
        sodipodi:cx="92.226189"
        sodipodi:sides="5"
        id="path855"
-       style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:13.22916667;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;stroke-linejoin:round"
+       style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:13.2292;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        sodipodi:type="star" />
   </g>
 </svg>

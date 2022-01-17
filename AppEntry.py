@@ -22,6 +22,8 @@ class AppEntry(QObject):
         self._downloads = apps_entry["Downloads"]
         self._version = packages_entry["Version"] if packages_entry else "unknown"
         self._maintainer = packages_entry["Maintainer"] if packages_entry else "This guy \"Not Sure\""
+        self._details = packages_entry["Details"] if packages_entry else "unknown"
+        self._readme = packages_entry["Readme"] if packages_entry else "unknown"
 
 
     def read_source(self):
@@ -63,6 +65,12 @@ class AppEntry(QObject):
     def read_maintainer(self):
         return self._maintainer
 
+    def read_details(self):
+        return self._details
+
+    def read_readme(self):
+        return self._readme
+
     source_changed = Signal()
     source=Property(str, read_source, notify=source_changed)
 
@@ -101,3 +109,9 @@ class AppEntry(QObject):
 
     maintainer_changed = Signal()
     maintainer=Property(str, read_maintainer, notify=maintainer_changed)
+
+    details_changed = Signal()
+    details=Property(str, read_details, notify=details_changed)
+
+    readme_changed = Signal()
+    readme=Property(str, read_readme, notify=readme_changed)
