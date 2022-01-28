@@ -5,12 +5,25 @@ import QtQml.Models 2.1
 import QtQuick.Layouts 1.15
 import QtGraphicalEffects 1.15
 import "../Style"
+import "../helpers/logging.js" as LoggingFunctions
+
 
 Item {
+    id: app_detail
+    property var target_app_detail
     Layout.fillHeight: true
     Layout.fillWidth: true
     width: parent.width
-
+    onVisibleChanged:{
+        if(visible){
+            target_app_detail = applisttab.dbp_highlighted
+            option_list.currentIndex = -1
+            photo_list.shouldfocus = true
+            photo_list.forceActiveFocus()
+            photo_list.currentIndex = 0
+            photo_list.lastItem = 0
+        }
+    }
     ColumnLayout {
         Layout.fillHeight: true
         Layout.fillWidth: true
@@ -47,7 +60,7 @@ Item {
                                 Layout.fillHeight: true
                                 Layout.fillWidth: true
 
-                                text: mainWindow.dbp_highlighted.name
+                                text: applisttab.dbp_highlighted.name
                                 width: parent.width
                             }
                             Layout.fillHeight: true
@@ -68,8 +81,9 @@ Item {
                                 cacheBuffer: 100
                                 spacing: 10
                                 orientation: ListView.Horizontal
-                                focus: visible
-
+                                property bool shouldfocus: true
+                                focus: visible && !installmenu.visible && !notificationmanager.notificationOpen && shouldfocus
+                                
 
 
                                 delegate: Rectangle {
@@ -94,6 +108,7 @@ Item {
                             }
 
                             Keys.onDownPressed: {
+                                option_list.shouldfocus = true
                                 option_list.forceActiveFocus()
                                 option_list.currentIndex = 0
                                 lastItem = currentIndex
@@ -137,16 +152,16 @@ Item {
                                 Layout.preferredWidth: parent.width/2
 
                                 BodyText {
-                                    text: "Version: " + mainWindow.dbp_highlighted.version
+                                    text: "Version: " + applisttab.dbp_highlighted.version
                                 }
                                 BodyText {
-                                    text: "Maintainer: " + mainWindow.dbp_highlighted.maintainer
+                                    text: "Maintainer: " + applisttab.dbp_highlighted.maintainer
                                 }
                                 BodyText {
-                                    text: "Likes: " + mainWindow.dbp_highlighted.likes
+                                    text: "Likes: " + applisttab.dbp_highlighted.likes
                                 }
                                 BodyText {
-                                    text: "Downloads: " + mainWindow.dbp_highlighted.downloads
+                                    text: "Downloads: " + applisttab.dbp_highlighted.downloads
                                 }
                                 BodyText {
                                     id: app_description
@@ -155,7 +170,7 @@ Item {
                                     Layout.fillWidth: true
                                     Layout.maximumHeight: 300
                                     Layout.maximumWidth: parent.width
-                                    text: mainWindow.dbp_highlighted.description
+                                    text: applisttab.dbp_highlighted.description
                                     elide: Text.ElideRight
                                     maximumLineCount: 10
                                 }
@@ -164,17 +179,27 @@ Item {
                             ListView {
                                 id: option_list
                                 currentIndex: -1
+                                property bool shouldfocus: false
+                                focus: visible && !installmenu.visible && !notificationmanager.notificationOpen && shouldfocus
 
                                 function select(option)
                                 {
-                                    if (option == "Install")
-                                    {
-
-                                } else if (option == "Readme"){
-                                console.log("open readme")
-                                readme_popup.open()
-                            }
-                        }
+                                    if (option == "Install") {
+                                        installmenu.customOpen(applisttab.dbp_highlighted)
+                                    } else if (option == "Update") {
+                                        repo.upgrade(applisttab.dbp_highlighted.package_id,applisttab.dbp_highlighted.installedDevice)
+                                    } else if (option == "Delete") {
+                                        repo.delete(applisttab.dbp_highlighted.package_id,applisttab.dbp_highlighted.installedLocation)
+                                    } else if (option == "Readme") {
+                                        console.log("open readme")
+                                        readme_popup.open()
+                                    } 
+                                    // This seemed like a good idea, but ends up being ugly and not as helpful as I hoped
+                                    // else if (option == "Log"){
+                                    //     console.log("open log")
+                                    //     log_popup.open()
+                                    // }
+                                }
                         Keys.onDownPressed: {
                             option_list.currentIndex = option_list.currentIndex < option_list.count - 1 ? option_list.currentIndex + 1: option_list.count - 1;
                         }
@@ -182,6 +207,7 @@ Item {
                             if (option_list.currentIndex <= 0)
                             {
                                 option_list.currentIndex = -1
+                                photo_list.shouldfocus = true
                                 photo_list.forceActiveFocus()
                                 photo_list.currentIndex = photo_list.lastItem
                             } else {
@@ -216,26 +242,53 @@ Item {
                     width: rect.ListView.isCurrentItem ? option_list.width: option_list.width - 35
                     property int indexOfThisDelegate: index
                     property string nameOfThisDelegate: name
-                    property string idOfThisDelegate: id
+                    // property string idOfThisDelegate: id
                     property var dataOfThisDelegate: rawdata
-                    RowLayout {
+                    // RowLayout {
                         BodyText {
                             id: nameTxt
                             text: name
-                            Layout.leftMargin: 20
+                    anchors.left: parent.left
+                    anchors.leftMargin: 20
+                            anchors.verticalCenter: parent.verticalCenter
+
                         }
-                    }
+                    // }
 
                 }
-                model: ListModel {
-                ListElement {
-                    name: "Install"
+            model:     ListModel {
+                id:option_model
+                Component.onCompleted: {
+                    append({name: applisttab.dbp_highlighted.updateAvailable ?  "Update" : "Install"});
+                    append({name: "Readme"});
+                    applisttab.onDbp_highlightedChanged.connect(this.setText)
+                    LoggingFunctions.listProperty(app_detail)
+                    app_detail.onVisibleChanged.connect(this.visibleChange)
                 }
-                ListElement {
-                    name: "Readme"
+                function visibleChange() {
+                    console.log("calling visible change. app_detail.visible: " + app_detail.visible)
+                    if(app_detail.visible){
+                        setProperty(0,"name",applisttab.dbp_highlighted.updateAvailable ?  "Update" : "Install")
+                        applisttab.dbp_highlighted.onUpdateAvailable_changed.connect(option_model.setText)
+                        applisttab.dbp_highlighted.onDownloadPercent_changed.connect(option_model.setText)
+                        applisttab.dbp_highlighted.onInstalledLocation_changed.connect(option_model.setText)
+                    } else {
+                        applisttab.dbp_highlighted.onUpdateAvailable_changed.disconnect(option_model.setText)
+                        applisttab.dbp_highlighted.onDownloadPercent_changed.disconnect(option_model.setText)
+                        applisttab.dbp_highlighted.onInstalledLocation_changed.disconnect(option_model.setText)
+                    }
+                }
+
+                function setText() {
+                    var top_button = applisttab.dbp_highlighted.downloadPercent ? "Cancel: Downloading... " + applisttab.dbp_highlighted.downloadPercent : 
+                        applisttab.dbp_highlighted.updateAvailable ?  "Update" : 
+                        applisttab.dbp_highlighted.installedLocation ?  "Delete" : 
+                        "Install"
+                    setProperty(0,"name", top_button)
                 }
 
             }
+
         }
 
     }
@@ -269,12 +322,31 @@ Popup {
 
         Component.onCompleted: {
             repo.onReadmeChanged.connect(updateReadme)
-            // readme_text.newReadme.connect(updateReadme)
         }
         function updateReadme(readme)
         {
             text = readme
         }
+    }
+    }
+}
+Popup {
+    id: log_popup
+    width: 800
+    height: 600
+    parent: Overlay.overlay
+    ScrollView{
+    width: 760
+    height: 560
+    x:20
+    y:20
+    clip: true
+    BodyText {
+        id: log_text
+        wrapMode: Text.Wrap
+        width: 760
+        text: applisttab.dbp_highlighted.downloadLog
+
     }
     }
 }

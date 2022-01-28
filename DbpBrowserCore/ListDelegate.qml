@@ -9,14 +9,4 @@ Rectangle {
 
             color: this.ListView.isCurrentItem ? Qt.lighter(Material.primary, 0.9): Qt.lighter(Material.primary, .7)
 
-            MouseArea {
-                anchors.fill: parent
-                onClicked: {
-                    mainWindow.dbp_highlighted = parent.dataOfThisDelegate
-                    app_list.currentIndex = parent.indexOfThisDelegate
-                }
-            }
-
-
-
         }

@@ -17,9 +17,16 @@ Item {
     //         anchors.centerIn: parent
     // }
     // }
+    id: app_list_container
+    // property string search_string: app_search.text
+    // onVisibleChanged: {
+    //     if(visible){
+    //         filterModel.setFilterString(search_string)
+    //     }
+    // }
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 10
+        // anchors.margins: 10
         width: parent.width
         Rectangle {
             color: Qt.lighter(Material.primary, 1)
@@ -32,7 +39,7 @@ Item {
                 anchors.centerIn: parent
                 TextField {
                     id: app_search
-                    focus: visible && !toplevelmenu.visible
+                    focus: visible && !toplevelmenu.visible && !notificationmanager.notificationOpen
                     placeholderText: "Type here.."
                     Layout.fillWidth: true
                     Layout.leftMargin: 10
@@ -43,7 +50,7 @@ Item {
                     Keys.forwardTo: [app_row]
 
                         onTextChanged: {
-                            filterModel.setFilterString(text);
+                            app_list.model.setFilterString(text);
                         }
                     }
                     // Button {
@@ -62,11 +69,11 @@ Item {
                 Layout.maximumWidth: parent.width
                 Keys.onDownPressed: {
                     app_list.currentIndex = app_list.currentIndex < app_list.count - 1 ? app_list.currentIndex + 1: app_list.count - 1;
-                    mainWindow.dbp_highlighted = app_list.currentItem.dataOfThisDelegate
+                    applisttab.dbp_highlighted = app_list.currentItem.dataOfThisDelegate
                 }
                 Keys.onUpPressed: {
                     app_list.currentIndex = app_list.currentIndex <= 0 ? 0: app_list.currentIndex - 1;
-                    mainWindow.dbp_highlighted = app_list.currentItem.dataOfThisDelegate
+                    applisttab.dbp_highlighted = app_list.currentItem.dataOfThisDelegate
                 }
                 Keys.onPressed: {
                     if (event.key === Qt.Key_Return)
@@ -109,34 +116,21 @@ Item {
 
                 ListView {
                     id: app_list
-                    model: filterModel
+                    model: applisttab.model
                     Layout.minimumHeight: 25
                     Layout.fillHeight: true
                     Layout.fillWidth: true
                     cacheBuffer: 100
                     spacing: 10
-                    // visible: !mainWindow.app_focused
-
-                    //     filterModel {
-                    //         onFilterUpdated: app_list.currentIndex = 0
-                    // }
-
+  
                     Connections {
-                        target: filterModel
-                        function onFilterUpdated()
+                        target: app_list.model
+                        function onDataReset()
                         {
-                            app_list.currentIndex = 0
-                            mainWindow.dbp_highlighted = app_list.currentItem.dataOfThisDelegate
-
-                        }
-                    }
-                    Connections {
-                        target: repo
-                        function onRepoRefreshed()
-                        {
+                            console.log("App list data was reset.")
                             app_list.currentIndex = 0
                             if (app_list.currentItem){
-                                mainWindow.dbp_highlighted = app_list.currentItem.dataOfThisDelegate
+                                applisttab.dbp_highlighted = app_list.currentItem.dataOfThisDelegate
                             }
                         }
                     }
@@ -146,9 +140,15 @@ Item {
                     width: rect.ListView.isCurrentItem ? app_list.width: app_list.width - 35
                     property int indexOfThisDelegate: index
                     property string nameOfThisDelegate: name
-                    property string idOfThisDelegate: id
+                    // property string idOfThisDelegate: id
                     property var dataOfThisDelegate: rawdata
+                    property bool updateableOfThisDelegate: updateable
+                    property string installedOfThisDelegate: installed
+                    property string downloadOfThisDelegate: download
+                    onDownloadOfThisDelegateChanged: {
+                        body_text.text= downloadOfThisDelegate ? downloadOfThisDelegate : updateable ? "Updateable" : installed ? "Installed" : ""
 
+                    }
                     RowLayout {
                         width: parent.width
                         anchors.verticalCenter: parent.verticalCenter
@@ -169,6 +169,16 @@ Item {
                         }
                         Item {
                             Layout.fillWidth: true
+                        }
+                        BodyText {
+                            // property string download_text: ""
+                            id: body_text
+                            text: downloadOfThisDelegate ? downloadOfThisDelegate : updateable ? "Updateable" : installed ? "Installed" : ""
+                            Layout.rightMargin: 20
+                            Component.onCompleted: {
+                                text = Qt.binding(function() { return (download ? download : updateable ? "Updateable" : installed ? "Installed" : "") })
+                            }
+                        
                         }
                         Image {
                             id: star
@@ -216,7 +226,13 @@ Item {
 
 
                     }
-
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: {
+                        applisttab.dbp_highlighted = parent.dataOfThisDelegate
+                        app_list.currentIndex = parent.indexOfThisDelegate
+                    }
+                }
 
 
                 }
@@ -267,7 +283,7 @@ Item {
                         color: parent.color
                         ColumnLayout {
                             TitleText {
-                                text: dbp_highlighted.name
+                                text: applisttab.dbp_highlighted.name
                                 width: parent.width
                             }
                             Layout.fillHeight: true
@@ -276,19 +292,19 @@ Item {
                             Layout.maximumHeight: parent.height
                             //                spacing: 10
                             DownloadableImage {
-                                source: mainWindow.dbp_highlighted.screenshot
+                                source: applisttab.dbp_highlighted.screenshot
                             }
                             BodyText {
-                                text: "Version: " + mainWindow.dbp_highlighted.version
+                                text: "Version: " + applisttab.dbp_highlighted.version
                             }
                             BodyText {
-                                text: "Maintainer: " + mainWindow.dbp_highlighted.maintainer
+                                text: "Maintainer: " + applisttab.dbp_highlighted.maintainer
                             }
                             BodyText {
-                                text: "Likes: " + mainWindow.dbp_highlighted.likes
+                                text: "Likes: " + applisttab.dbp_highlighted.likes
                             }
                             BodyText {
-                                text: "Downloads: " + mainWindow.dbp_highlighted.downloads
+                                text: "Downloads: " + applisttab.dbp_highlighted.downloads
                             }
                             BodyText {
                                 id: app_description
@@ -297,7 +313,7 @@ Item {
                                 Layout.fillWidth: true
                                 Layout.maximumHeight: 80
                                 Layout.maximumWidth: parent.width
-                                text: mainWindow.dbp_highlighted.description
+                                text: applisttab.dbp_highlighted.description
                                 elide: Text.ElideRight
                                 maximumLineCount: 2
                             }

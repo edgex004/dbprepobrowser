@@ -9,6 +9,7 @@ from RepoInterface import RepoDelegate
 from AppListModel import AppListFilterModel, ListModel
 from PySide2.QtQuickControls2 import QQuickStyle
 from StringListModel import StringListModel
+from dbpinstaller.dbpinstaller import installer
 
 import style_rc
 
@@ -19,9 +20,14 @@ if __name__ == "__main__":
     QQuickStyle.setStyle("Material")
     repoDelegate = RepoDelegate()
 
-    filtermodel = AppListFilterModel()
-    # filtermodel.setSortRole(ListModel.NameRole)
-    repoDelegate.repo_qt.repoRefreshed.connect(filtermodel.appList.resetDataSlot)
+    appListModel = ListModel()
+    fullfiltermodel = AppListFilterModel(appListModel)
+    installedfiltermodel = AppListFilterModel(appListModel,installedFilter=True)
+    installedfiltermodel.setUpdateableSort(True)
+    downloadfiltermodel = AppListFilterModel(appListModel,downloadingFilter=True)
+    repoDelegate.repo_qt.repoRefreshed.connect(appListModel.resetDataSlot)
+    repoDelegate.repo_qt.localRefresh.connect(appListModel.setLocalAppStatus)
+    repoDelegate.repo_qt.downloadProgress.connect(appListModel.updateDownloadPercent)
 
 
     screenshotList = StringListModel()
@@ -29,13 +35,15 @@ if __name__ == "__main__":
 
     engine = QQmlApplicationEngine()
     engine.rootContext().setContextProperty("repo", repoDelegate.repo_qt)
-    engine.rootContext().setContextProperty("filterModel", filtermodel)
+    engine.rootContext().setContextProperty("fullfiltermodel", fullfiltermodel)
+    engine.rootContext().setContextProperty("installedfiltermodel", installedfiltermodel)
+    engine.rootContext().setContextProperty("downloadfiltermodel", downloadfiltermodel)
     engine.rootContext().setContextProperty("screenshotList", screenshotList)
 
     engine.load(os.fspath(Path(__file__).resolve().parent / "main.qml"))
 
 
-    # repoDelegate.repo_qt.refresh()
+    repoDelegate.repo_qt.refresh()
 
     if not engine.rootObjects():
         sys.exit(-1)

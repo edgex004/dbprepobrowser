@@ -17,14 +17,6 @@ import QtQuick.Controls.Material 2.14
                 color:"transparent"
                 Image {
                 id: app_preview
-//                Layout.fillHeight: true
-//                Layout.fillWidth: true
-
-
-                // Layout.alignment: Qt.AlignTop
-                // Layout.margins: 10
-                // Layout.preferredWidth: parent.Layout.maximumWidth-20
-                // Layout.preferredHeight: (parent.Layout.maximumWidth-20) * 720 / 1280
                 anchors.fill: parent
 
                 onPaintedHeightChanged: {
@@ -41,25 +33,9 @@ import QtQuick.Controls.Material 2.14
                         this.parent.width = app_preview.paintedWidth
                     }
                 }
-                onStatusChanged:{
-
-                    console.log('Status changed to ' + app_preview.status)
-                    console.log('Ready status: ' + Image.Ready)
-//                     Layout.preferredHeight = paintedHeight
-//                     Layout.alignment = Qt.AlignTop
-//                if (app_preview.status == Image.Loaded) {
-//                                     console.log('Status changed')
-
-//                                     Layout.preferredHeight = paintedHeight
-//                                     Layout.alignment = Qt.AlignTop
-
-//                                 }
-                }
-//                width:  parent.maximumWidth - 20
                 fillMode: parent.scale ? Image.PreserveAspectFit : Image.Pad
                 source: parent.source
                 asynchronous: true
-                // visible:false
             }
 
 

@@ -1,5 +1,5 @@
 import re
-from PySide2.QtCore import QCoreApplication, QObject, Signal, Slot, QSortFilterProxyModel, QAbstractListModel, QModelIndex, Qt, QByteArray
+from PySide2.QtCore import QCoreApplication, QObject, Signal, Slot, Property
 from pathlib import Path
 import urllib3
 from types import FunctionType
@@ -7,7 +7,8 @@ from AppEntry import AppEntry
 from ProcessRunnable import ProcessRunnable
 from typing import List, Union
 import configparser
-
+from StringListModel import StringListModel
+from AppListModel import ListModel
 
 def download(url_file_list: list [(str, Path)], callback: FunctionType):
     http = urllib3.PoolManager()
@@ -50,19 +51,49 @@ class RepoQt(QObject):
     readme_file = 'readme.txt'
     readmeChanged = Signal(str, arguments=['msg'])
     detailsRefreshed = Signal(object)
+    localRefresh = Signal(object, object)
     repoRefreshed = Signal(object)
     repoRefreshFailed = Signal()
     detailsRefreshFailed = Signal()
+    mountSelectionMissing = Signal()
     downloadProgress = Signal(str,int,int,int, arguments=['name', 'chunk_number', 'chunk_size', 'total_size'])
     cacheUpdateProgress = Signal(str,int,int, arguments=['url', 'sources_processed', 'total_sources'])
+    cacheUpdateComplete = Signal()
+    localRefreshRequired = Signal()
     installedMd5sumMismatch = Signal(str,str, arguments=['package_id', 'path'])
     packageExistsSkip = Signal(str,str, arguments=['package_id', 'path'])
     writeError = Signal(str, arguments=['path'])
     readError = Signal(str, arguments=['path'])
 
 
-    def __init__(self):
+    def __init__(self, delegate):
         super().__init__()
+        self._mount_names = StringListModel()
+        self._delegate = delegate
+        self.cacheUpdateComplete.connect(self.send_cache_update)
+        self.localRefreshRequired.connect(self.send_local_cache_update)
+        
+
+    def read_mount_names(self):
+        return self._mount_names
+    
+    mount_names_changed = Signal()
+    mount_names=Property(QObject, read_mount_names, notify=mount_names_changed)
+
+    @Slot()
+    def find_mount_names(self):
+        from dbpinstaller.dbpinstaller.mounts import find_mounts
+        mounts = find_mounts()
+        names = []
+        for mount in mounts:
+            if mount.name:
+                names.append(mount.name)
+            else:
+                names.append(mount.path)
+        self._mount_names = StringListModel()
+        # self._mount_names.addData(["/media/fake1","/media/fake2","/media/fake3","/media/fake4"])
+        self._mount_names.resetDataSlot(names)
+        self.mount_names_changed.emit()
 
 
     def change_readme(self):
@@ -91,54 +122,106 @@ class RepoQt(QObject):
 
 
     @Slot(str, str)
-    def update_details(self, detail_url_path: str, readme_url_path: str):
+    def update_details(self, detail_url: str, readme_url: str):
         print("details update called")
-        file_list = [(self.baseUrl + detail_url_path, self.ini_store / self.details_file)]
+        file_list = [(detail_url, self.ini_store / self.details_file)]
         callback = lambda result : self.send_image_urls() if result else self.detailsRefreshFailed.emit()
         download_threaded(file_list, callback)
 
-        file_list2 = [(self.baseUrl + readme_url_path, self.ini_store / self.readme_file)]
+        file_list2 = [(readme_url, self.ini_store / self.readme_file)]
         callback2 = lambda result : self.change_readme() if result else self.detailsRefreshFailed.emit()
         download_threaded(file_list2, callback2)
 
 
 
-
-    def send_ini_names(self):
+    @Slot()
+    def send_cache_update(self):
         ret = []
-        for source in self.sources:
-            appFile = self.ini_store / (source + self.base_appFile)
-            packagesFile = self.ini_store / (source + self.base_packagesFile)
-
-            app_config = configparser.ConfigParser()
-            app_config.read(appFile)
-            packages_config = configparser.ConfigParser()
-            packages_config.read(packagesFile)
-            sections = app_config.sections()
-            for section in sections:
-                try:
-                    app_section_entry = app_config[section]
-                except KeyError as e:
-                    print(f'{section} is missing or incomplete: {e}')
-                try:
-                    ret.append(AppEntry(source,app_section_entry, packages_config[app_section_entry["Package"]]))
-                except KeyError as e:
-                    print(f'{section} packages entry is missing or incomplete: {e}')
-                    ret.append(AppEntry(source,app_section_entry, None))
+        dataMap = {}
+        app_list = self._delegate.installer.list_apps()
+        for app_id in app_list:
+            app = self._delegate.installer.get_app(app_id)
+            package = self._delegate.installer.get_package(app.package_id)
+            ret.append(AppEntry(app, package))
+            dataMap[ret[-1].package_id] = len(ret) - 1
 
 
+        installed_list = self._delegate.installer.list_installed()
+        update_list = self._delegate.installer.update_info()
 
-        self.repoRefreshed.emit( ret )
-        move_to_main_thread( ret )
+        for installed in installed_list:
+            row = dataMap[installed.id]
+            ret[row].installedLocation = installed.path
+            ret[row].installedDevice = installed.device
+        for update in update_list:
+            row = dataMap[update.id]
+            ret[row].updateAvailable = True
+            ret[row].installedDevice = update.device
+
+        self.repoRefreshed.emit( ret)
+        # move_to_main_thread( ret )
+        # self.refreshUpgradeable_async()
+
+    def refresh_sync(self):
+        self._delegate.installer.update()
+        self.cacheUpdateComplete.emit()
 
     @Slot()
+    def send_local_cache_update(self):
+        installed_list = self._delegate.installer.list_installed()
+        update_list = self._delegate.installer.update_info()
+
+        self.localRefresh.emit( installed_list, update_list)
+
+    def refresh_sync(self):
+        self._delegate.installer.update()
+        self.cacheUpdateComplete.emit()
+    
+    @Slot()
     def refresh(self):
-        file_list = []
-        for source in self.sources:
-            file_list.append((self.baseUrl + f'/repo/dists/dbprepo/{source}/Packages', self.ini_store / (source + self.base_packagesFile)))
-            file_list.append((self.baseUrl + f'/repo/dists/dbprepo/{source}/Apps', self.ini_store / (source + self.base_appFile)))
-        callback = lambda result : self.send_ini_names() if result else self.repoRefreshFailed.emit()
-        download_threaded(file_list, callback)
+        t = ProcessRunnable(target=self.refresh_sync, args=())
+        t.start()
+
+
+    def installAndAlert_sync(self, package, location, replace):
+        from dbpinstaller.dbpinstaller.installer import InstallInfo
+        info = InstallInfo(id=package, device=location, replace=replace)
+        self._delegate.installer.download(info)
+        self.downloadProgress.emit(package, 0, 0, 0)
+        self.localRefreshRequired.emit()
+
+
+    def install_async(self, package: str, mount_match: str, replace):
+        print(f"Installing {package} to {mount_match}. Replace: {replace}")
+        from dbpinstaller.dbpinstaller.mounts import find_mounts
+        mounts = find_mounts()
+        match = None
+        for mount in mounts:
+            if mount.name == mount_match or mount.path == mount_match:
+                match = mount
+                break
+        if match == None:
+            self.mountSelectionMissing.emit()
+            return
+        print(match)
+        t = ProcessRunnable(target=self.installAndAlert_sync, args=(package, match, replace))
+        t.start()
+        # self._delegate.installer.download_app_to(app, match)
+
+    @Slot(str,str)
+    def install(self, package: str, mount_match: str):
+        self.install_async(package, mount_match, False)
+    
+    @Slot(str,str)
+    def upgrade(self, package: str, mount_match: str):
+        self.install_async(package, mount_match, True)
+
+    @Slot(str,str)
+    def delete(self, package: str, installed_path: str):
+        #package can be used to check dependencies and offer to remove them in the future.
+        import os
+        os.remove(installed_path)
+        self.localRefreshRequired.emit()
 
 
 from dbpinstaller.dbpinstaller.delegate import VoidInstallerDelegate
@@ -150,7 +233,11 @@ class RepoDelegate(VoidInstallerDelegate):
     """
     def __init__(self):
         super().__init__()
-        self.repo_qt = RepoQt()
+        self.repo_qt = RepoQt(delegate=self)
+        from dbpinstaller.dbpinstaller import DbpInstaller
+        self.installer = DbpInstaller(delegate=self)
+        self.repo_qt.cacheUpdateComplete.emit()
+
     def on_download_progress(self, name, chunk_number, chunk_size, total_size):
         if total_size < 0:
             # size unknown
@@ -164,6 +251,9 @@ class RepoDelegate(VoidInstallerDelegate):
     def on_cache_update_progress(self, url, sources_processed, total_sources):
         percentage = round((sources_processed / total_sources), 2) * 100
         print("Cache update: {} {}%".format(url, percentage))
+        # if sources_processed == total_sources:
+        #     self.repo_qt.cacheUpdateComplete.emit()
+        #     return
         self.repo_qt.cacheUpdateProgress.emit(url, sources_processed, total_sources)
 
     def on_installed_md5sum_mismatch(self, package_id, path):

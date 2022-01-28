@@ -3,34 +3,23 @@ import QtQuick.Controls 2.14
 import QtQuick.Controls.Material 2.14
 import QtQml.Models 2.1
 import QtQuick.Layouts 1.15
-// import QtQuick.Controls.Styles 1.4
+import QtGraphicalEffects 1.15
 import QtGamepad 1.0
 import "DbpBrowserCore"
+import "DbpBrowserCore/Menus"
+import "DbpBrowserCore/Notifications"
+import "DbpBrowserCore/Widgets"
 
 
 
 ApplicationWindow {
     id: mainWindow
-    property var dbp_highlighted: QtObject {
-        property string name: ""
-        property string version: ""
-        property string screenshot: ""
-        property string maintainer: ""
-        property string likes: ""
-        property string downloads: ""
-        property string description: ""
-        
-    }
-
-
-    property bool app_focused: false
 
     visible: true
     width: 1280
     height: 720
 
     title: "DBP Repo Browser"
-
 
     Gamepad {
         id: gamepad1
@@ -70,46 +59,58 @@ StackLayout{
     signal gotoZoomPhoto()
 
     onGotoBase: {this.currentIndex = 0}
-    // onGotoMenu: {this.currentIndex = 1}
     onGotoZoomPhoto: {this.currentIndex = 1}
 
     ColumnLayout {
-        anchors.fill: parent
-        TabBar {
-            id: bar
-            width: parent.width
-            TabButton {
-                text: qsTr("App Repo")
+        RowLayout{
+            Layout.fillWidth: true
+            ColoredSVG {
+                source: "qrc:/images/lbutton.svg"
+                Layout.preferredWidth: 60
+                Layout.preferredHeight: 40
+                Layout.alignment: Qt.AlignVCenter
+                color: Qt.lighter(Material.primary, 1.7)
             }
-            TabButton {
-                text: qsTr("My Apps")
+            TabBar {
+                id: bar
+                Layout.fillWidth: true
+                TabButton {
+                    text: "Repo"
+                }
+                TabButton {
+                    text: "Installed"
+                }
+                TabButton {
+                    text: "Downloading"
+                }
             }
-            TabButton {
-                text: qsTr("Downloads")
+            ColoredSVG {
+                source: "qrc:/images/rbutton.svg"
+                Layout.preferredWidth: 60
+                Layout.preferredHeight: 40
+                Layout.alignment: Qt.AlignVCenter
+                color: Qt.lighter(Material.primary, 1.7)
+
             }
         }
+
 
         StackLayout {
             width: parent.width
             currentIndex: bar.currentIndex
-            AppListTab { }
-            Item {
-                id: discoverTab
+            AppListTab { 
+                model: fullfiltermodel
             }
-            Item {
-                id: activityTab
+            AppListTab { 
+                model: installedfiltermodel
+            }
+            AppListTab { 
+                model: downloadfiltermodel
             }
         }
 
     }
 
-    // AppListTab { }
-
-
-    // TopLevelMenu {
-    //     id: topmenu
-    //     visible: false
-    // }
 StackLayout{
 DownloadableImage {
 // Image {
@@ -154,10 +155,18 @@ Rectangle{
 
 }
 }
+
+}
     TopLevelMenu {
         id:toplevelmenu
     }
-}
 
+    InstallMenu {
+        id:installmenu
+    }
+
+    NotificationManager {
+        id:notificationmanager
+    }
 
 }
