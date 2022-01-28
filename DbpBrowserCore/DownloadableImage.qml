@@ -20,14 +20,12 @@ import QtQuick.Controls.Material 2.14
                 anchors.fill: parent
 
                 onPaintedHeightChanged: {
-                    console.log('Painted Height: ' + app_preview.paintedHeight)
                     if (snapToSize){
                         this.parent.Layout.preferredHeight = app_preview.paintedHeight
                         this.parent.height = app_preview.paintedHeight
                     }
                 }
                 onPaintedWidthChanged: {
-                    console.log('Painted Width: ' + app_preview.paintedWidth)
                     if (snapToSize){
                         this.parent.Layout.preferredWidth = app_preview.paintedWidth
                         this.parent.width = app_preview.paintedWidth

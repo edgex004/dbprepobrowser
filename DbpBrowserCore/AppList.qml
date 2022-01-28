@@ -101,17 +101,6 @@ Item {
                         toplevelmenu.open()
                         // topmenu.forceActiveFocus()
                     }
-                    else if (event.key === Qt.Key_Back)
-                    {
-                        // if (mainWindow.app_focused==false)
-                        // {
-                        //     console.log("app already unfocused")
-                        // } else {
-                        //     console.log("unfocus app info")
-                        //     mainWindow.app_focused=false
-                        // }
-
-                    }
                 }
 
                 ListView {

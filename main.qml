@@ -9,6 +9,7 @@ import "DbpBrowserCore"
 import "DbpBrowserCore/Menus"
 import "DbpBrowserCore/Notifications"
 import "DbpBrowserCore/Widgets"
+import "helpers/logging.js" as LoggingFunctions
 
 
 
@@ -39,27 +40,35 @@ ApplicationWindow {
         id: gamepadKeyNavigation
         gamepad: gamepad1
         active: true
-        buttonBKey: Qt.Key_Return
-        buttonAKey: Qt.Key_Back
+        buttonAKey: Qt.Key_Return
+        buttonBKey: Qt.Key_Delete
         buttonYKey: Qt.Key_PageDown
         buttonXKey: Qt.Key_PageUp
         buttonStartKey: Qt.Key_Escape
         buttonSelectKey: Qt.Key_Escape
+        buttonL1Key: Qt.Key_Back
+        buttonR1Key: Qt.Key_Forward
         onButtonAKeyChanged: {
             console.log("button A changed")
         }
         onLeftKeyChanged: {
             console.log("button left changed")
         }
+        // Component.onCompleted: {
+        //     console.log("Controller support booted.")
+        //     LoggingFunctions.listProperty(this)
+        // }
     }
 StackLayout{
     id: top_stack
     signal gotoBase()
-    // signal gotoMenu()
     signal gotoZoomPhoto()
 
     onGotoBase: {this.currentIndex = 0}
     onGotoZoomPhoto: {this.currentIndex = 1}
+    width: 1280
+    height: 720
+
 
     ColumnLayout {
         RowLayout{
@@ -107,11 +116,21 @@ StackLayout{
             AppListTab { 
                 model: downloadfiltermodel
             }
+            Keys.onPressed: {
+                if (event.key === Qt.Key_Back){
+                    bar.currentIndex = bar.currentIndex > 1 ? bar.currentIndex - 1: 0;
+                }
+                else if ( event.key == Qt.Key_Forward)
+                {
+                    bar.currentIndex = bar.currentIndex < bar.count - 1 ? bar.currentIndex + 1: bar.count - 1;
+                }
+            }
         }
 
     }
 
 StackLayout{
+    anchors.fill: parent
 DownloadableImage {
 // Image {
     id: zoom_image
@@ -148,12 +167,7 @@ DownloadableImage {
 
 
 }
-Rectangle{
-        Layout.preferredWidth: 1200
-    Layout.preferredHeight: 700
-    color:"red"
 
-}
 }
 
 }

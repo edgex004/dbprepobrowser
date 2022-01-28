@@ -25,7 +25,7 @@ Item {
     }
     Keys.onDownPressed: {
 
-        placeholder.currentIndex = placeholder.currentIndex < placeholder.count - 1 ? placeholder.currentIndex + 1: app_list.count - 1;
+        placeholder.currentIndex = placeholder.currentIndex < placeholder.count - 1 ? placeholder.currentIndex + 1: placeholder.count - 1;
     }
     Keys.onUpPressed: {
         placeholder.currentIndex = placeholder.currentIndex <= 0 ? 0: placeholder.currentIndex - 1;

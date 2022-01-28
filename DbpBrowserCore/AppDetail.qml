@@ -120,7 +120,7 @@ Item {
                                     zoom_image.source = photo_list.currentItem.source
                                     top_stack.gotoZoomPhoto()
                                 }
-                                else if (event.key === Qt.Key_Back || event.key == Qt.Key_Escape)
+                                else if (event.key == Qt.Key_Escape || event.key == Qt.Key_Delete)
                                 {
                                     option_list.currentIndex = -1
                                     stack.currentIndex = 0
@@ -223,7 +223,7 @@ Item {
                             console.log("selected " + option_list.currentItem.name)
                             select(option_list.currentItem.nameOfThisDelegate)
                         }
-                        else if (event.key === Qt.Key_Back || event.key == Qt.Key_Escape)
+                        else if (event.key == Qt.Key_Escape|| event.key == Qt.Key_Delete)
                         {
                             option_list.currentIndex = -1
                             stack.currentIndex = 0

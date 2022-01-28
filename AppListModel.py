@@ -197,6 +197,7 @@ class ListModel(QAbstractListModel):
                 app.updateAvailable = False
                 app.installedDevice = ''
                 index=self.index(row, 0)
+                self.dataChanged.emit(index,index,ListModel.InstalledRole)
                 self.dataChanged.emit(index,index,ListModel.UpdateableRole)
             row += 1
         for installed in installed_list:
@@ -204,7 +205,7 @@ class ListModel(QAbstractListModel):
             self.dataStore[row].installedLocation = installed.path
             self.dataStore[row].installedDevice = installed.device
             index=self.index(row, 0)
-            self.dataChanged.emit(index,index,ListModel.UpdateableRole)
+            self.dataChanged.emit(index,index,ListModel.InstalledRole)
         for update in update_list:
             row = self.dataMap[update.id]
             self.dataStore[row].updateAvailable = True
