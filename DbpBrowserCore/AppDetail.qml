@@ -266,9 +266,8 @@ Item {
                     app_detail.onVisibleChanged.connect(this.visibleChange)
                 }
                 function visibleChange() {
-                    console.log("calling visible change. app_detail.visible: " + app_detail.visible)
                     if(app_detail.visible){
-                        setProperty(0,"name",applisttab.dbp_highlighted.updateAvailable ?  "Update" : "Install")
+                        option_model.setText()
                         applisttab.dbp_highlighted.onUpdateAvailable_changed.connect(option_model.setText)
                         applisttab.dbp_highlighted.onDownloadPercent_changed.connect(option_model.setText)
                         applisttab.dbp_highlighted.onInstalledLocation_changed.connect(option_model.setText)
