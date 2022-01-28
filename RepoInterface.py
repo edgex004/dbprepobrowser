@@ -43,7 +43,7 @@ def move_to_main_thread(targets: Union[QObject, list[QObject]]):
 class RepoQt(QObject):
 
     baseUrl = "https://pyra-handheld.com"
-    ini_store = Path('.')
+    ini_store = Path('./.cache/')
     sources = ['opensource', 'proprietary', 'needdata']
     base_appFile = "_apps.ini"
     base_packagesFile = "_packages.ini"
@@ -72,6 +72,9 @@ class RepoQt(QObject):
         self._delegate = delegate
         self.cacheUpdateComplete.connect(self.send_cache_update)
         self.localRefreshRequired.connect(self.send_local_cache_update)
+        import os
+        if not os.path.isdir(self.ini_store):
+            os.mkdir(self.ini_store)
         
 
     def read_mount_names(self):

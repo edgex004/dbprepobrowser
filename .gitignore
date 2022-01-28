@@ -72,4 +72,5 @@ Thumbs.db
 *.exe
 
 # Repo cache
-*.ini
+.cache/**
+.vscode/**
