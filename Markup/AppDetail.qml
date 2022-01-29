@@ -5,7 +5,7 @@ import QtQml.Models 2.1
 import QtQuick.Layouts 1.15
 import QtGraphicalEffects 1.15
 import "../Style"
-import "../helpers/logging.js" as LoggingFunctions
+import "../Script/logging.js" as LoggingFunctions
 
 
 Item {
@@ -82,7 +82,7 @@ Item {
                                 spacing: 10
                                 orientation: ListView.Horizontal
                                 property bool shouldfocus: true
-                                focus: visible && !installmenu.visible && !notificationmanager.notificationOpen && shouldfocus
+                                focus: visible && !installmenu.visible && !dialogManager.dialogOpen && shouldfocus
                                 
 
 
@@ -180,7 +180,7 @@ Item {
                                 id: option_list
                                 currentIndex: -1
                                 property bool shouldfocus: false
-                                focus: visible && !installmenu.visible && !notificationmanager.notificationOpen && shouldfocus
+                                focus: visible && !installmenu.visible && !dialogManager.dialogOpen && shouldfocus
 
                                 function select(option)
                                 {
@@ -192,7 +192,7 @@ Item {
                                         repo.delete(applisttab.dbp_highlighted.package_id,applisttab.dbp_highlighted.installedLocation)
                                     } else if (option == "Readme") {
                                         console.log("open readme")
-                                        readme_popup.open()
+                                        dialogManager.openReadme()
                                     } 
                                     // This seemed like a good idea, but ends up being ugly and not as helpful as I hoped
                                     // else if (option == "Log"){
@@ -303,32 +303,7 @@ Item {
 
 }
 }
-Popup {
-    id: readme_popup
-    width: 800
-    height: 600
-    parent: Overlay.overlay
-    ScrollView{
-    width: 760
-    height: 560
-    x:20
-    y:20
-    clip: true
-    BodyText {
-        id: readme_text
-        wrapMode: Text.Wrap
-        width: 760
 
-        Component.onCompleted: {
-            repo.onReadmeChanged.connect(updateReadme)
-        }
-        function updateReadme(readme)
-        {
-            text = readme
-        }
-    }
-    }
-}
 Popup {
     id: log_popup
     width: 800

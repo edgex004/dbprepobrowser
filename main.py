@@ -5,10 +5,10 @@ import sys
 
 from PySide2.QtGui import QGuiApplication
 from PySide2.QtQml import QQmlApplicationEngine
-from RepoInterface import RepoDelegate
-from AppListModel import AppListFilterModel, ListModel
+from Backend.RepoInterface import RepoDelegate
+from Backend.AppListModel import AppListFilterModel, ListModel
 from PySide2.QtQuickControls2 import QQuickStyle
-from StringListModel import StringListModel
+from Backend.StringListModel import StringListModel
 from dbpinstaller.dbpinstaller import installer
 
 import style_rc

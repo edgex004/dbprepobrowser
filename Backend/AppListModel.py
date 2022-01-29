@@ -1,6 +1,6 @@
-from PySide2.QtCore import QThread,QCoreApplication,QObject, Signal, Slot, QSortFilterProxyModel, QAbstractListModel, QModelIndex, Qt, QByteArray, Property
-from typing import List, Union
-from AppEntry import AppEntry
+from PySide2.QtCore import Signal, Slot, QSortFilterProxyModel, QAbstractListModel, QModelIndex, Qt, QByteArray, Property
+from typing import Union
+from Backend.AppEntry import AppEntry
 from dbpinstaller.dbpinstaller.installer import InstallInfo
 from dbpinstaller.dbpinstaller.dbpd import LocalPackage
 

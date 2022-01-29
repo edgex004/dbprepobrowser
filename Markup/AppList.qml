@@ -5,6 +5,7 @@ import QtQml.Models 2.1
 import QtQuick.Layouts 1.15
 import QtGraphicalEffects 1.15
 import "../Style"
+import "./Widgets"
 
 Item {
     // Drawer {
@@ -39,7 +40,7 @@ Item {
                 anchors.centerIn: parent
                 TextField {
                     id: app_search
-                    focus: visible && !toplevelmenu.visible && !notificationmanager.notificationOpen
+                    focus: visible && !toplevelmenu.visible && !dialogManager.dialogOpen
                     placeholderText: "Type here.."
                     Layout.fillWidth: true
                     Layout.leftMargin: 10
@@ -169,49 +170,25 @@ Item {
                             }
                         
                         }
-                        Image {
-                            id: star
-                            source: "qrc:/images/star.svg"
-                            antialiasing: true
-                            visible: false
-
-                        }
-                        ColorOverlay {
-                            source: star
-                            color: Material.foreground
-                            antialiasing: true
-                            visible: true
+                        ColoredSVG {
+                            source: "qrc:/Images/star.svg"
                             Layout.preferredWidth: 20
                             Layout.preferredHeight: 20
-                            Layout.bottomMargin: 2
-
+                            Layout.alignment: Qt.AlignVCenter
                         }
+
                         BodyText {
                             text: dataOfThisDelegate.likes
                             Layout.leftMargin: 5
                             Layout.rightMargin: 20
 
                         }
-                        Image {
-                            id: arrow
-                            source: "qrc:/images/arrow.svg"
-                            antialiasing: true
-                            visible: false
+                        ColoredSVG {
+                            source: "qrc:/Images/arrow.svg"
+                            Layout.preferredWidth: 20
+                            Layout.preferredHeight: 20
+                            Layout.alignment: Qt.AlignVCenter
                         }
-                        ColorOverlay {
-                            source: arrow
-                            color: Material.foreground
-                            antialiasing: true
-                            visible: rect.ListView.isCurrentItem
-                            Layout.preferredWidth: 30
-                            Layout.preferredHeight: 30
-                        }
-                        // Item {
-                        //     Layout.preferredWidth: 30
-                        //     Layout.preferredHeight: 30
-                        //     visible: !rect.ListView.isCurrentItem
-                        //     Layout.leftMargin: 20
-                        // }
 
 
                     }

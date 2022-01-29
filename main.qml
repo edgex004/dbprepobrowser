@@ -5,11 +5,11 @@ import QtQml.Models 2.1
 import QtQuick.Layouts 1.15
 import QtGraphicalEffects 1.15
 import QtGamepad 1.0
-import "DbpBrowserCore"
-import "DbpBrowserCore/Menus"
-import "DbpBrowserCore/Notifications"
-import "DbpBrowserCore/Widgets"
-import "helpers/logging.js" as LoggingFunctions
+import "Markup"
+import "Markup/Menus"
+import "Markup/Dialogs"
+import "Markup/Widgets"
+import "Script/logging.js" as LoggingFunctions
 
 
 
@@ -59,128 +59,133 @@ ApplicationWindow {
         //     LoggingFunctions.listProperty(this)
         // }
     }
-StackLayout{
-    id: top_stack
-    signal gotoBase()
-    signal gotoZoomPhoto()
+    StackLayout {
+        id: top_stack
+        signal gotoBase()
+        signal gotoZoomPhoto()
 
-    onGotoBase: {this.currentIndex = 0}
-    onGotoZoomPhoto: {this.currentIndex = 1}
-    width: 1280
-    height: 720
-
-
-    ColumnLayout {
-        RowLayout{
-            Layout.fillWidth: true
-            ColoredSVG {
-                source: "qrc:/images/lbutton.svg"
-                Layout.preferredWidth: 60
-                Layout.preferredHeight: 40
-                Layout.alignment: Qt.AlignVCenter
-                color: Qt.lighter(Material.primary, 1.7)
-            }
-            TabBar {
-                id: bar
-                Layout.fillWidth: true
-                TabButton {
-                    text: "Repo"
-                }
-                TabButton {
-                    text: "Installed"
-                }
-                TabButton {
-                    text: "Downloading"
-                }
-            }
-            ColoredSVG {
-                source: "qrc:/images/rbutton.svg"
-                Layout.preferredWidth: 60
-                Layout.preferredHeight: 40
-                Layout.alignment: Qt.AlignVCenter
-                color: Qt.lighter(Material.primary, 1.7)
-
-            }
+        onGotoBase: {
+            this.currentIndex = 0
         }
+        onGotoZoomPhoto: {
+            this.currentIndex = 1
+        }
+        width: 1280
+        height: 720
 
+
+        ColumnLayout {
+            RowLayout {
+                Layout.fillWidth: true
+                ColoredSVG {
+                    source: "qrc:/Images/lbutton.svg"
+                    Layout.preferredWidth: 60
+                    Layout.preferredHeight: 40
+                    Layout.alignment: Qt.AlignVCenter
+                    color: Qt.lighter(Material.primary, 1.7)
+                }
+                TabBar {
+                    id: bar
+                    Layout.fillWidth: true
+                    TabButton {
+                        text: "Repo"
+                    }
+                    TabButton {
+                        text: "Installed"
+                    }
+                    TabButton {
+                        text: "Downloading"
+                    }
+                }
+                ColoredSVG {
+                    source: "qrc:/Images/rbutton.svg"
+                    Layout.preferredWidth: 60
+                    Layout.preferredHeight: 40
+                    Layout.alignment: Qt.AlignVCenter
+                    color: Qt.lighter(Material.primary, 1.7)
+
+                }
+            }
+
+
+            StackLayout {
+                width: parent.width
+                currentIndex: bar.currentIndex
+                AppListTab {
+                    model: fullfiltermodel
+                }
+                AppListTab {
+                    model: installedfiltermodel
+                }
+                AppListTab {
+                    model: downloadfiltermodel
+                }
+                Keys.onPressed: {
+                    if (event.key === Qt.Key_Back)
+                    {
+                        bar.currentIndex = bar.currentIndex > 1 ? bar.currentIndex - 1: 0;
+                    }
+                    else if (event.key == Qt.Key_Forward)
+                    {
+                        bar.currentIndex = bar.currentIndex < bar.count - 1 ? bar.currentIndex + 1: bar.count - 1;
+                    }
+                }
+            }
+
+        }
 
         StackLayout {
-            width: parent.width
-            currentIndex: bar.currentIndex
-            AppListTab { 
-                model: fullfiltermodel
-            }
-            AppListTab { 
-                model: installedfiltermodel
-            }
-            AppListTab { 
-                model: downloadfiltermodel
-            }
-            Keys.onPressed: {
-                if (event.key === Qt.Key_Back){
-                    bar.currentIndex = bar.currentIndex > 1 ? bar.currentIndex - 1: 0;
+            anchors.fill: parent
+            DownloadableImage {
+                // Image {
+                id: zoom_image
+                // Layout.fillHeight: true
+                // Layout.fillWidth: true
+                Layout.preferredWidth: 1280
+                Layout.preferredHeight: 720
+                x: 0
+                y: 0
+                desiredwidth: 1280
+                visible: true
+                // width: parent.width
+                // height: parent.height
+                focus: visible
+
+
+                signal right()
+                signal left()
+
+
+                Keys.onRightPressed: {
+                    zoom_image.right()
                 }
-                else if ( event.key == Qt.Key_Forward)
-                {
-                    bar.currentIndex = bar.currentIndex < bar.count - 1 ? bar.currentIndex + 1: bar.count - 1;
+                Keys.onLeftPressed: {
+                    zoom_image.left()
                 }
+                Keys.onPressed: {
+                    if (event.key === Qt.Key_Back || event.key == Qt.Key_Escape)
+                    {
+                        console.log("Go invisible!")
+                        top_stack.gotoBase()
+                    }
+                }
+
+
             }
+
         }
 
     }
-
-StackLayout{
-    anchors.fill: parent
-DownloadableImage {
-// Image {
-    id: zoom_image
-    // Layout.fillHeight: true
-    // Layout.fillWidth: true
-    Layout.preferredWidth: 1280
-    Layout.preferredHeight: 720
-    x:0
-    y:0
-    desiredwidth: 1280
-    visible: true
-    // width: parent.width
-    // height: parent.height
-    focus: visible
-
-
-    signal right()
-    signal left()
-
-
-    Keys.onRightPressed: {
-        zoom_image.right()
-    }
-    Keys.onLeftPressed: {
-        zoom_image.left()
-    }
-    Keys.onPressed: {
-        if (event.key === Qt.Key_Back || event.key == Qt.Key_Escape)
-        {
-            console.log("Go invisible!")
-            top_stack.gotoBase()
-        }
-    }
-
-
-}
-
-}
-
-}
     TopLevelMenu {
-        id:toplevelmenu
+        id: toplevelmenu
     }
 
     InstallMenu {
-        id:installmenu
+        id: installmenu
     }
 
-    NotificationManager {
-        id:notificationmanager
+    DialogManager {
+        id: dialogManager
     }
 
 }

@@ -1,10 +1,10 @@
 <!DOCTYPE RCC><RCC version="1.0">
 <qresource prefix="/">
     <file>qtquickcontrols2.conf</file>
-    <file>images/arrow.svg</file>
-    <file>images/star.svg</file>
-    <file>images/lbutton.svg</file>
-    <file>images/rbutton.svg</file>
+    <file>Images/arrow.svg</file>
+    <file>Images/star.svg</file>
+    <file>Images/lbutton.svg</file>
+    <file>Images/rbutton.svg</file>
     <file>Style/Style.qml</file>
     <file>Style/qmldir</file>
 </qresource>

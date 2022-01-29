@@ -1,6 +1,5 @@
-from PySide2.QtCore import QThread,QCoreApplication,QObject, Signal, Slot, QSortFilterProxyModel, QAbstractListModel, QModelIndex, Qt, QByteArray
-from typing import List, Union
-from AppEntry import AppEntry
+from PySide2.QtCore import Signal, Slot, QAbstractListModel, QModelIndex, Qt, QByteArray
+from typing import Union
 
 
 class StringListModel(QAbstractListModel):

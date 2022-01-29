@@ -3,12 +3,11 @@ from PySide2.QtCore import QCoreApplication, QObject, Signal, Slot, Property
 from pathlib import Path
 import urllib3
 from types import FunctionType
-from AppEntry import AppEntry
-from ProcessRunnable import ProcessRunnable
-from typing import List, Union
+from Backend.AppEntry import AppEntry
+from Backend.ProcessRunnable import ProcessRunnable
+from typing import Union
 import configparser
-from StringListModel import StringListModel
-from AppListModel import ListModel
+from Backend.StringListModel import StringListModel
 
 def download(url_file_list: list [(str, Path)], callback: FunctionType):
     http = urllib3.PoolManager()

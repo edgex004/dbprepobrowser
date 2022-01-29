@@ -2,7 +2,7 @@ import QtQuick 2.0
 import QtQuick.Layouts 1.0
 import "../../Style"
 import QtQml.Models 2.15
-import "../../helpers/logging.js" as LoggingFunctions
+import "../../Script/logging.js" as LoggingFunctions
 
 
 BaseMenu {
