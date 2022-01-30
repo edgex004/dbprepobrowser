@@ -190,6 +190,8 @@ Item {
                                         repo.upgrade(applisttab.dbp_highlighted.package_id,applisttab.dbp_highlighted.installedDevice)
                                     } else if (option == "Delete") {
                                         repo.delete(applisttab.dbp_highlighted.package_id,applisttab.dbp_highlighted.installedLocation)
+                                    } else if (option.startsWith("Cancel")) {
+                                        repo.cancel(applisttab.dbp_highlighted.package_id)
                                     } else if (option == "Readme") {
                                         console.log("open readme")
                                         dialogManager.openReadme()

@@ -8,6 +8,7 @@ from Backend.ProcessRunnable import ProcessRunnable
 from typing import Union
 import configparser
 from Backend.StringListModel import StringListModel
+from threading import Event
 
 def download(url_file_list: list [(str, Path)], callback: FunctionType):
     http = urllib3.PoolManager()
@@ -71,6 +72,7 @@ class RepoQt(QObject):
         self._delegate = delegate
         self.cacheUpdateComplete.connect(self.send_cache_update)
         self.localRefreshRequired.connect(self.send_local_cache_update)
+        self._cancel_map = {}
         import os
         if not os.path.isdir(self.ini_store):
             os.mkdir(self.ini_store)
@@ -188,7 +190,8 @@ class RepoQt(QObject):
     def installAndAlert_sync(self, package, location, replace):
         from dbpinstaller.dbpinstaller.installer import InstallInfo
         info = InstallInfo(id=package, device=location, replace=replace)
-        self._delegate.installer.download(info)
+        self._cancel_map[package] = Event()
+        self._delegate.installer.download(info,cancel_event=self._cancel_map[package])
         self.downloadProgress.emit(package, 0, 0, 0)
         self.localRefreshRequired.emit()
 
@@ -225,6 +228,12 @@ class RepoQt(QObject):
         os.remove(installed_path)
         self.localRefreshRequired.emit()
 
+    @Slot(str)
+    def cancel(self, package: str):
+        event = self._cancel_map.get(package)
+        if event:
+            event.set()
+            self._cancel_map.pop(package)
 
 from dbpinstaller.dbpinstaller.delegate import VoidInstallerDelegate
 
