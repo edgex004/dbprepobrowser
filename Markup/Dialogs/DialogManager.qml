@@ -19,15 +19,25 @@ Item {
 
     Component.onCompleted: {
         repo.mountSelectionMissing.connect(mountselectfailed.open)
+        repo.debFileMissing.connect(debnotfound.open)
     }
 
     function openReadme(){
         readmePopup.open()
     }
+    
+    function openAptLog(){
+        aptLogPopup.open()
+    }
 
     BaseDialog {
         id: mountselectfailed
         notifyText: "Selected mount point is no longer available."
+    }
+    
+    BaseDialog {
+        id: debnotfound
+        notifyText: "A deb library could not be found. Please check apt log for details."
     }
 
     BaseDialog {
@@ -38,6 +48,17 @@ Item {
         function updateReadme(readme)
         {
             notifyText = readme
+        }
+    }
+    
+    BaseDialog {
+        id: aptLogPopup
+        Component.onCompleted: {
+            repo.onApt_log_changed.connect(updateReadme)
+        }
+        function updateReadme(log)
+        {
+            notifyText = log
         }
     }
 

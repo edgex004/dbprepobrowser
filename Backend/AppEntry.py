@@ -34,7 +34,8 @@ class AppEntry(QObject):
         self._readme = packages_entry.readme_url if packages_entry else "unknown"
         self._size = packages_entry.size if packages_entry else "unknown"
         self.loggedChunks = 0
-        self._downloadPercent = ""
+        self._downloadPercent = -1
+        self._downloadStatus = ""
         self._downloadLog = "Not tried downloading yet."
         self._installedLocation = ""
         self._installedDevice = ""
@@ -84,6 +85,9 @@ class AppEntry(QObject):
 
     def read_downloadPercent(self):
         return self._downloadPercent
+
+    def read_downloadStatus(self):
+        return self._downloadStatus
 
     def read_downloadLog(self):
         return self._downloadLog
@@ -140,10 +144,16 @@ class AppEntry(QObject):
     readme=Property(str, read_readme, notify=readme_changed)
 
     downloadPercent_changed = Signal()
-    def write_downloadPercent(self, percent: str):
+    def write_downloadPercent(self, percent: int):
         self._downloadPercent = percent
         self.downloadPercent_changed.emit()
-    downloadPercent=Property(str, read_downloadPercent, write_downloadPercent, notify=downloadPercent_changed)
+    downloadPercent=Property(int, read_downloadPercent, write_downloadPercent, notify=downloadPercent_changed)
+
+    downloadStatus_changed = Signal()
+    def write_downloadStatus(self, percent: str):
+        self._downloadStatus = percent
+        self.downloadStatus_changed.emit()
+    downloadStatus=Property(str, read_downloadStatus, write_downloadStatus, notify=downloadStatus_changed)
 
     downloadLog_changed = Signal()
     def write_downloadLog(self, log: str):
@@ -153,6 +163,7 @@ class AppEntry(QObject):
 
     installedLocation_changed = Signal()
     def write_installedLocation(self, location: str):
+        print(f"Installed location for {self.package_id} changing from {self._installedLocation} to {location}")
         self._installedLocation = location
         self.installedLocation_changed.emit()
     installedLocation=Property(str, read_installedLocation, write_installedLocation, notify=installedLocation_changed)

@@ -4,7 +4,7 @@ import QtQuick.Controls.Material 2.14
 import QtQml.Models 2.1
 import QtQuick.Layouts 1.15
 import QtGraphicalEffects 1.15
-import QtGamepad 1.0
+import QtGamepad 1.15
 import "Markup"
 import "Markup/Menus"
 import "Markup/Dialogs"
@@ -17,6 +17,7 @@ ApplicationWindow {
     id: mainWindow
 
     visible: true
+    visibility: "FullScreen"
     width: 1280
     height: 720
 
@@ -70,8 +71,8 @@ ApplicationWindow {
         onGotoZoomPhoto: {
             this.currentIndex = 1
         }
-        width: 1280
-        height: 720
+        width: mainWindow.width
+        height: mainWindow.height
 
 
         ColumnLayout {
@@ -125,7 +126,7 @@ ApplicationWindow {
                     {
                         bar.currentIndex = bar.currentIndex > 1 ? bar.currentIndex - 1: 0;
                     }
-                    else if (event.key == Qt.Key_Forward)
+                    else if (event.key === Qt.Key_Forward)
                     {
                         bar.currentIndex = bar.currentIndex < bar.count - 1 ? bar.currentIndex + 1: bar.count - 1;
                     }
@@ -141,11 +142,11 @@ ApplicationWindow {
                 id: zoom_image
                 // Layout.fillHeight: true
                 // Layout.fillWidth: true
-                Layout.preferredWidth: 1280
-                Layout.preferredHeight: 720
+                Layout.preferredWidth: mainWindow.width
+                Layout.preferredHeight: mainWindow.height
                 x: 0
                 y: 0
-                desiredwidth: 1280
+                desiredwidth: mainWindow.width
                 visible: true
                 // width: parent.width
                 // height: parent.height

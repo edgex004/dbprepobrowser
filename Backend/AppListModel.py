@@ -95,16 +95,16 @@ class ListModel(QAbstractListModel):
 
     def __init__(self):
         super().__init__()
-        self._downloadPercent = ""
+#        self._downloadPercent = -1
 
-    def read_downloadPercent(self):
-        return self._downloadPercent
+#    def read_downloadPercent(self):
+#        return self._downloadPercent
 
-    downloadPercent_changed = Signal()
-    def write_downloadPercent(self, percent: str):
-        self._downloadPercent = percent
-        self.downloadPercent_changed.emit()
-    downloadPercent=Property(str, read_downloadPercent, write_downloadPercent, notify=downloadPercent_changed)
+#    downloadPercent_changed = Signal()
+#    def write_downloadPercent(self, percent: str):
+#        self._downloadPercent = percent
+#        self.downloadPercent_changed.emit()
+#    downloadPercent=Property(str, read_downloadPercent, write_downloadPercent, notify=downloadPercent_changed)
 
     def setData(self, index: QModelIndex, value, role: int = Qt.EditRole):
         self.dataStore[index.row()] = value
@@ -163,7 +163,7 @@ class ListModel(QAbstractListModel):
         if (role == self.InstalledRole):
             return self.dataStore[index.row()].installedLocation
         if (role == self.DownloadRole):
-            return self.dataStore[index.row()].downloadPercent
+            return self.dataStore[index.row()].downloadStatus
             
         return None
 
@@ -193,9 +193,11 @@ class ListModel(QAbstractListModel):
         row = 0
         while row < len(self.dataStore):
             app = self.dataStore[row]
-            if app.updateAvailable or app.installedDevice:
-                app.updateAvailable = False
-                app.installedDevice = ''
+            if self.dataStore[row].updateAvailable or self.dataStore[row].installedDevice:
+                print("Clearing: " + str(app.package_id))
+                self.dataStore[row].updateAvailable = False
+                self.dataStore[row].installedDevice = ''
+                self.dataStore[row].installedLocation = ''
                 index=self.index(row, 0)
                 self.dataChanged.emit(index,index,ListModel.InstalledRole)
                 self.dataChanged.emit(index,index,ListModel.UpdateableRole)
@@ -223,15 +225,29 @@ class ListModel(QAbstractListModel):
         # size unknown
             downloadAmount = int(chunk_number * chunk_size)
             self.dataStore[row].downloadLog += f"Download: {app_id} {downloadAmount}\n"
-            self.dataStore[row].downloadPercent = f"{downloadAmount}"
+            self.dataStore[row].downloadStatus = f"Chunk: {downloadAmount}"
+            self.dataStore[row].downloadPercent = 0
         elif chunk_number * chunk_size >= total_size:
         #download complete
             self.dataStore[row].downloadLog += f"Download complete: {app_id}%\n"
-            self.dataStore[row].downloadPercent = ""
+            self.dataStore[row].downloadStatus = ""
+            self.dataStore[row].downloadPercent = -1
         else:
             percentage = int(round((chunk_number * chunk_size) / total_size, 2) * 100)
             self.dataStore[row].downloadLog += f"Download: {app_id} {percentage}%\n"
-            self.dataStore[row].downloadPercent = f"{percentage}%"
+            self.dataStore[row].downloadStatus = f"\u2193 {percentage}%"
+            self.dataStore[row].downloadPercent = percentage
         self.dataStore[row].loggedChunks = chunk_number
         index=self.index(row, 0)
         self.dataChanged.emit(index,index,ListModel.DownloadRole)
+
+    @Slot()
+    def updateDownloadStatus(self, app_id: str, status: str, force_percent: int = None):
+        row = self.dataMap[app_id]
+        self.dataStore[row].downloadLog += f"{status}\n"
+        self.dataStore[row].downloadStatus = status
+        if force_percent:
+            self.dataStore[row].downloadPercent = force_percent
+        index = self.index(row, 0)
+        self.dataChanged.emit(index, index, ListModel.DownloadRole)
+

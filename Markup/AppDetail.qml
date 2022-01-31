@@ -73,7 +73,7 @@ Item {
                                 property int lastItem: 0
                                 Layout.maximumWidth: parent.width
                                 Layout.preferredWidth: parent.width
-                                Layout.preferredHeight: (380)* 720 / 1280 + 50
+                                Layout.preferredHeight: (mainWindow.width/4+60)* 720 / 1280 + 50
 
                                 Layout.minimumHeight: 25
                                 Layout.fillHeight: true
@@ -87,14 +87,14 @@ Item {
 
 
                                 delegate: Rectangle {
-                                width: 380
-                                height: (380)* 720 / 1280
+                                width: mainWindow.width/4+60
+                                height: (mainWindow.width/4+60)* 720 / 1280
                                 property string source: dataEntry
 
                                 color: this.ListView.isCurrentItem ? Material.accent: "transparent"
                                 DownloadableImage {
                                     source: parent.source
-                                    desiredwidth: 380
+                                    desiredwidth: mainWindow.width/4+60
                                     snapToSize: true
                                     anchors.centerIn: parent
                                     color: Material.background
@@ -271,17 +271,17 @@ Item {
                     if(app_detail.visible){
                         option_model.setText()
                         applisttab.dbp_highlighted.onUpdateAvailable_changed.connect(option_model.setText)
-                        applisttab.dbp_highlighted.onDownloadPercent_changed.connect(option_model.setText)
+                        applisttab.dbp_highlighted.onDownloadStatus_changed.connect(option_model.setText)
                         applisttab.dbp_highlighted.onInstalledLocation_changed.connect(option_model.setText)
                     } else {
                         applisttab.dbp_highlighted.onUpdateAvailable_changed.disconnect(option_model.setText)
-                        applisttab.dbp_highlighted.onDownloadPercent_changed.disconnect(option_model.setText)
+                        applisttab.dbp_highlighted.onDownloadStatus_changed.disconnect(option_model.setText)
                         applisttab.dbp_highlighted.onInstalledLocation_changed.disconnect(option_model.setText)
                     }
                 }
 
                 function setText() {
-                    var top_button = applisttab.dbp_highlighted.downloadPercent ? "Cancel: Downloading... " + applisttab.dbp_highlighted.downloadPercent : 
+                    var top_button = applisttab.dbp_highlighted.downloadStatus ? "Cancel: " + applisttab.dbp_highlighted.downloadStatus :
                         applisttab.dbp_highlighted.updateAvailable ?  "Update" : 
                         applisttab.dbp_highlighted.installedLocation ?  "Delete" : 
                         "Install"

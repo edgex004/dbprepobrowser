@@ -56,7 +56,9 @@ class RepoQt(QObject):
     repoRefreshFailed = Signal()
     detailsRefreshFailed = Signal()
     mountSelectionMissing = Signal()
+    debFileMissing = Signal()
     downloadProgress = Signal(str,int,int,int, arguments=['name', 'chunk_number', 'chunk_size', 'total_size'])
+    downloadStatus = Signal(str, str, int, arguments=['name', 'status', 'force_percent'])
     cacheUpdateProgress = Signal(str,int,int, arguments=['url', 'sources_processed', 'total_sources'])
     cacheUpdateComplete = Signal()
     localRefreshRequired = Signal()
@@ -69,6 +71,7 @@ class RepoQt(QObject):
     def __init__(self, delegate):
         super().__init__()
         self._mount_names = StringListModel()
+        self._apt_log = ""
         self._delegate = delegate
         self.cacheUpdateComplete.connect(self.send_cache_update)
         self.localRefreshRequired.connect(self.send_local_cache_update)
@@ -76,11 +79,11 @@ class RepoQt(QObject):
         import os
         if not os.path.isdir(self.ini_store):
             os.mkdir(self.ini_store)
-        
+
 
     def read_mount_names(self):
         return self._mount_names
-    
+
     mount_names_changed = Signal()
     mount_names=Property(QObject, read_mount_names, notify=mount_names_changed)
 
@@ -99,6 +102,18 @@ class RepoQt(QObject):
         self._mount_names.resetDataSlot(names)
         self.mount_names_changed.emit()
 
+    def read_apt_log(self):
+        print(f"Reading apt log: {self._apt_log}")
+        print(f"Reading apt log: {self._apt_log}")
+        return self._apt_log
+
+    def append_apt_log(self, log_entry: str):
+        print("Writing apt log")
+        self._apt_log += f"{log_entry}\n"
+        self.apt_log_changed.emit(self._apt_log)
+
+    apt_log_changed = Signal(str)
+    apt_log=Property(QObject, read_apt_log, notify=apt_log_changed)
 
     def change_readme(self):
         file = self.ini_store / self.readme_file
@@ -152,11 +167,27 @@ class RepoQt(QObject):
 
         installed_list = self._delegate.installer.list_installed()
         update_list = self._delegate.installer.update_info()
+        print(f"Installed length {len(installed_list)} and string is '{installed_list[0].id}'")
+        if len(installed_list) > 0 and installed_list[0].id == '!':
+            print("Resetting the installed list.")
+            installed_list = []
+        import pprint
+        pp = pprint.PrettyPrinter(indent=4)
+
+        print("Installed:")
+        pp.pprint(installed_list)
 
         for installed in installed_list:
+            print(installed.id)
+            print(installed.path)
+            print(installed.device)
             row = dataMap[installed.id]
             ret[row].installedLocation = installed.path
             ret[row].installedDevice = installed.device
+
+        print("Updateable:")
+        pp.pprint(update_list)
+
         for update in update_list:
             row = dataMap[update.id]
             ret[row].updateAvailable = True
@@ -174,13 +205,20 @@ class RepoQt(QObject):
     def send_local_cache_update(self):
         installed_list = self._delegate.installer.list_installed()
         update_list = self._delegate.installer.update_info()
-
-        self.localRefresh.emit( installed_list, update_list)
+        if len(installed_list) > 0 and installed_list[0].id == '!':
+            installed_list = []
+        print("Installed:")
+        for installed in installed_list:
+            print(installed.id)
+        print("Updateable:")
+        for update in update_list:
+            print(update.id)
+        self.localRefresh.emit(installed_list, update_list)
 
     def refresh_sync(self):
         self._delegate.installer.update()
         self.cacheUpdateComplete.emit()
-    
+
     @Slot()
     def refresh(self):
         t = ProcessRunnable(target=self.refresh_sync, args=())
@@ -216,7 +254,7 @@ class RepoQt(QObject):
     @Slot(str,str)
     def install(self, package: str, mount_match: str):
         self.install_async(package, mount_match, False)
-    
+
     @Slot(str,str)
     def upgrade(self, package: str, mount_match: str):
         self.install_async(package, mount_match, True)
@@ -225,7 +263,9 @@ class RepoQt(QObject):
     def delete(self, package: str, installed_path: str):
         #package can be used to check dependencies and offer to remove them in the future.
         import os
+#        from time import sleep
         os.remove(installed_path)
+#        sleep(5)
         self.localRefreshRequired.emit()
 
     @Slot(str)
@@ -258,6 +298,8 @@ class RepoDelegate(VoidInstallerDelegate):
             print("Download: {} {}%".format(name, percentage))
         self.repo_qt.downloadProgress.emit(name, chunk_number, chunk_size, total_size)
 
+    def on_installing_dbp_depends(self, name):
+        self.repo_qt.downloadStatus.emit(name, "\u2193 Depends", 0)        
 
     def on_cache_update_progress(self, url, sources_processed, total_sources):
         percentage = round((sources_processed / total_sources), 2) * 100
@@ -283,4 +325,12 @@ class RepoDelegate(VoidInstallerDelegate):
         print("Read error: ", path)
         self.repo_qt.readError.emit(path)
 
-
+    def on_installing_debs(self, packages, done):
+        if not done:
+            self.repo_qt.append_apt_log(f"Installing deb: {packages}")
+        else:
+            self.repo_qt.append_apt_log(f"Deb install complete.")
+            
+    def on_deb_not_found(self, package_name):
+        self.repo_qt.append_apt_log(f"Could not find deb: {package_name}")
+        self.repo_qt.debFileMissing.emit()

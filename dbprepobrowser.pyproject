@@ -1,3 +1,28 @@
 {
-    "files": ["main.py", "main.qml","]
+    "files": [
+    "main.qml",
+    "DbpBrowserCore/*.qml",
+    "Backend/AppEntry.py",
+    "Backend/StringListModel.py",
+    "Backend/RepoInterface.py",
+    "Backend/AppListModel.py",
+    "Backend/ProcessRunnable.py",
+    "Markup/DownloadableImage.qml",
+    "Markup/AppList.qml",
+    "Markup/Menus/InstallMenu.qml",
+    "Markup/Menus/BaseMenu.qml",
+    "Markup/Menus/TopLevelMenu.qml",
+    "Markup/AppDetail.qml",
+    "Markup/MyBusyIndicator.qml",
+    "Markup/TitleText.qml",
+    "Markup/Dialogs/BaseDialog.qml",
+    "Markup/Dialogs/DialogManager.qml",
+    "Markup/Widgets/ColoredSVG.qml",
+    "Markup/ProgressBar.qml",
+    "Markup/ListDelegate.qml",
+    "Markup/BodyText.qml",
+    "Markup/AppListTab.qml",
+    "Style/Style.qml",
+    "main.py"
+    ]
 }

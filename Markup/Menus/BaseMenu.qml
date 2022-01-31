@@ -12,7 +12,7 @@ Item {
     anchors.fill: parent
     id: basemenu
     visible: inner_popup.visible
-    focus: inner_popup.visible
+    focus: inner_popup.visible && !dialogManager.dialogOpen
     
     signal open()
     signal selected(string item)

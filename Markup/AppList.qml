@@ -115,9 +115,8 @@ Item {
   
                     Connections {
                         target: app_list.model
-                        function onDataReset()
+                        function onFilterUpdated()
                         {
-                            console.log("App list data was reset.")
                             app_list.currentIndex = 0
                             if (app_list.currentItem){
                                 applisttab.dbp_highlighted = app_list.currentItem.dataOfThisDelegate
@@ -156,18 +155,35 @@ Item {
                             id: nameTxt
                             text: name
                             Layout.leftMargin: 20
-                        }
-                        Item {
+                            Layout.rightMargin: 20
+                            elide:"ElideRight"
                             Layout.fillWidth: true
                         }
                         BodyText {
                             // property string download_text: ""
                             id: body_text
-                            text: downloadOfThisDelegate ? downloadOfThisDelegate : updateable ? "Updateable" : installed ? "Installed" : ""
+                            text: download  ? download : updateable ? "Updateable" : installed ? "Installed" : ""
                             Layout.rightMargin: 20
-                            Component.onCompleted: {
-                                text = Qt.binding(function() { return (download ? download : updateable ? "Updateable" : installed ? "Installed" : "") })
+//                            Component.onCompleted: {
+//                                text = Qt.binding(function() { return (download  ? download : updateable ? "Updateable" : installed ? "Installed" : "") })
+//                            }
+                            Binding on text {
+                                when: download
+                                value: download
                             }
+                            Binding on text {
+                                when: !download && updateable
+                                value: "Updateable"
+                            }
+                            Binding on text {
+                                when: !download && !updateable && installed
+                                value: "Installed"
+                            }
+                            Binding on text {
+                                when: !download && !updateable && !installed
+                                value: ""
+                            }
+                            
                         
                         }
                         ColoredSVG {
@@ -185,8 +201,9 @@ Item {
                         }
                         ColoredSVG {
                             source: "qrc:/Images/arrow.svg"
-                            Layout.preferredWidth: 20
-                            Layout.preferredHeight: 20
+                            Layout.preferredWidth: 30
+                            Layout.preferredHeight: 30
+                            visible: rect.ListView.isCurrentItem
                             Layout.alignment: Qt.AlignVCenter
                         }
 

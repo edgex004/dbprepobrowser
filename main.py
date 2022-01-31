@@ -22,13 +22,13 @@ if __name__ == "__main__":
 
     appListModel = ListModel()
     fullfiltermodel = AppListFilterModel(appListModel)
-    installedfiltermodel = AppListFilterModel(appListModel,installedFilter=True)
+    installedfiltermodel = AppListFilterModel(appListModel, installedFilter=True)
     installedfiltermodel.setUpdateableSort(True)
-    downloadfiltermodel = AppListFilterModel(appListModel,downloadingFilter=True)
+    downloadfiltermodel = AppListFilterModel(appListModel, downloadingFilter=True)
     repoDelegate.repo_qt.repoRefreshed.connect(appListModel.resetDataSlot)
     repoDelegate.repo_qt.localRefresh.connect(appListModel.setLocalAppStatus)
     repoDelegate.repo_qt.downloadProgress.connect(appListModel.updateDownloadPercent)
-
+    repoDelegate.repo_qt.downloadStatus.connect(appListModel.updateDownloadStatus)
 
     screenshotList = StringListModel()
     repoDelegate.repo_qt.detailsRefreshed.connect(screenshotList.resetDataSlot)
