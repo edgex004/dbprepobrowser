@@ -3,6 +3,9 @@ import QtQuick.Layouts 1.0
 import "../../Style"
 import QtQml.Models 2.15
 import "../../Script/logging.js" as LoggingFunctions
+import ".."
+import QtQuick.Controls.Material 2.14
+
 
 
 BaseMenu {
@@ -15,6 +18,22 @@ BaseMenu {
     function doCustomOpen(target) {
         app = target
     }
+    
+    ReadOnlyList{
+        title: "DEB to install"
+        model: repo.deb_to_install
+    }
+    
+    ReadOnlyList{
+        title: "DEB not found"
+        model:repo.missing_deb
+    }
+    
+    ReadOnlyList{
+        title: "DBP To install"
+        model:repo.dbp_to_install
+    }
+
 
     Component.onCompleted: {
         this.onSelected.connect(this.select)
@@ -24,6 +43,7 @@ BaseMenu {
     onVisibleChanged: {
         if (visible){
             repo.find_mount_names()
+            repo.parse_package(app.package_id)
         }
     }
     function select(name)

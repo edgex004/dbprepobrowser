@@ -57,6 +57,7 @@ class RepoQt(QObject):
     detailsRefreshFailed = Signal()
     mountSelectionMissing = Signal()
     debFileMissing = Signal()
+    dependancyConflict = Signal()
     downloadProgress = Signal(str,int,int,int, arguments=['name', 'chunk_number', 'chunk_size', 'total_size'])
     downloadStatus = Signal(str, str, int, arguments=['name', 'status', 'force_percent'])
     cacheUpdateProgress = Signal(str,int,int, arguments=['url', 'sources_processed', 'total_sources'])
@@ -71,6 +72,9 @@ class RepoQt(QObject):
     def __init__(self, delegate):
         super().__init__()
         self._mount_names = StringListModel()
+        self._deb_to_install = StringListModel()
+        self._missing_deb = StringListModel()
+        self._dbp_to_install = StringListModel()
         self._apt_log = ""
         self._delegate = delegate
         self.cacheUpdateComplete.connect(self.send_cache_update)
@@ -101,6 +105,41 @@ class RepoQt(QObject):
         # self._mount_names.addData(["/media/fake1","/media/fake2","/media/fake3","/media/fake4"])
         self._mount_names.resetDataSlot(names)
         self.mount_names_changed.emit()
+        
+    def read_deb_to_install(self):
+        return self._deb_to_install
+
+    def write_deb_to_install(self, packages: StringListModel):
+        self._deb_to_install.resetDataSlot(packages)
+        self.deb_to_install_changed.emit()
+
+    deb_to_install_changed = Signal()
+    deb_to_install = Property(QObject, read_deb_to_install, write_deb_to_install, notify=deb_to_install_changed)
+    
+    def read_missing_deb(self):
+        return self._missing_deb
+
+    def write_missing_deb(self, packages: StringListModel):
+        self._missing_deb.resetDataSlot(packages)
+        self.missing_deb_changed.emit()
+
+    missing_deb_changed = Signal()
+    missing_deb = Property(QObject, read_missing_deb, write_missing_deb, notify=missing_deb_changed)
+
+
+    def read_dbp_to_install(self):
+        return self._dbp_to_install
+
+    def write_dbp_to_install(self, packages: StringListModel):
+        self._dbp_to_install.resetDataSlot(packages)
+        self.dbp_to_install_changed.emit()
+
+    dbp_to_install_changed = Signal()
+    dbp_to_install = Property(QObject, read_dbp_to_install, write_dbp_to_install, notify=dbp_to_install_changed)
+
+    @Slot(str)
+    def parse_package(self, package_id: str):
+        self.dbp_to_install, self.deb_to_install, self.missing_deb = self._delegate.installer.parse_packages([package_id])
 
     def read_apt_log(self):
         print(f"Reading apt log: {self._apt_log}")
@@ -228,11 +267,21 @@ class RepoQt(QObject):
     def installAndAlert_sync(self, package, location, replace):
         from dbpinstaller.dbpinstaller.installer import InstallInfo
         info = InstallInfo(id=package, device=location, replace=replace)
-        self._cancel_map[package] = Event()
+        cancel = Event()
+        dbp_to_install, deb_to_install, missing_deb = self._delegate.installer.parse_packages([package])
+        for dbp_id in dbp_to_install:
+            if dbp_id in self._cancel_map.keys():
+                print(f"{dbp_id} is being downloaded by another thread. Skip.")
+                self.dependancyConflict.emit()
+                return
+        for dbp_id in dbp_to_install:
+            self.downloadStatus.emit(dbp_id, "\u2193 Depends", 0)
+            self._cancel_map[dbp_id] = cancel
         self._delegate.installer.download(info,cancel_event=self._cancel_map[package])
-        self.downloadProgress.emit(package, 0, 0, 0)
+        for dbp_id in dbp_to_install:
+            self.downloadProgress.emit(dbp_id, 0, 0, 0)
+            self._cancel_map.pop(dbp_id)
         self.localRefreshRequired.emit()
-
 
     def install_async(self, package: str, mount_match: str, replace):
         print(f"Installing {package} to {mount_match}. Replace: {replace}")
@@ -246,7 +295,7 @@ class RepoQt(QObject):
         if match == None:
             self.mountSelectionMissing.emit()
             return
-        print(match)
+        
         t = ProcessRunnable(target=self.installAndAlert_sync, args=(package, match, replace))
         t.start()
         # self._delegate.installer.download_app_to(app, match)
@@ -273,7 +322,6 @@ class RepoQt(QObject):
         event = self._cancel_map.get(package)
         if event:
             event.set()
-            self._cancel_map.pop(package)
 
 from dbpinstaller.dbpinstaller.delegate import VoidInstallerDelegate
 
@@ -297,9 +345,6 @@ class RepoDelegate(VoidInstallerDelegate):
             percentage = round((chunk_number * chunk_size) / total_size, 2) * 100
             print("Download: {} {}%".format(name, percentage))
         self.repo_qt.downloadProgress.emit(name, chunk_number, chunk_size, total_size)
-
-    def on_installing_dbp_depends(self, name):
-        self.repo_qt.downloadStatus.emit(name, "\u2193 Depends", 0)        
 
     def on_cache_update_progress(self, url, sources_processed, total_sources):
         percentage = round((sources_processed / total_sources), 2) * 100
@@ -331,6 +376,7 @@ class RepoDelegate(VoidInstallerDelegate):
         else:
             self.repo_qt.append_apt_log(f"Deb install complete.")
             
-    def on_deb_not_found(self, package_name):
-        self.repo_qt.append_apt_log(f"Could not find deb: {package_name}")
+    def on_deb_not_found(self, package_names):
+        for package_name in package_names:
+            self.repo_qt.append_apt_log(f"Could not find deb: {package_name}")
         self.repo_qt.debFileMissing.emit()

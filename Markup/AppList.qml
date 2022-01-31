@@ -1,9 +1,10 @@
-import QtQuick 2.14
-import QtQuick.Controls 2.14
-import QtQuick.Controls.Material 2.14
+import QtQuick 2.15
+import QtQuick.Controls 2.15
+import QtQuick.Controls.Material 2.15
 import QtQml.Models 2.1
 import QtQuick.Layouts 1.15
 import QtGraphicalEffects 1.15
+import QtQml 2.15
 import "../Style"
 import "./Widgets"
 
@@ -168,18 +169,22 @@ Item {
 //                                text = Qt.binding(function() { return (download  ? download : updateable ? "Updateable" : installed ? "Installed" : "") })
 //                            }
                             Binding on text {
+                                restoreMode: Binding.RestoreBindingOrValue
                                 when: download
                                 value: download
                             }
                             Binding on text {
+                                restoreMode: Binding.RestoreBindingOrValue                                
                                 when: !download && updateable
                                 value: "Updateable"
                             }
                             Binding on text {
+                                restoreMode: Binding.RestoreBindingOrValue                                
                                 when: !download && !updateable && installed
                                 value: "Installed"
                             }
                             Binding on text {
+                                restoreMode: Binding.RestoreBindingOrValue                                
                                 when: !download && !updateable && !installed
                                 value: ""
                             }

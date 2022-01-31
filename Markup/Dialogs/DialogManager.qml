@@ -20,6 +20,7 @@ Item {
     Component.onCompleted: {
         repo.mountSelectionMissing.connect(mountselectfailed.open)
         repo.debFileMissing.connect(debnotfound.open)
+        repo.dependancyConflict.connect(dependencyConflict.open)
     }
 
     function openReadme(){
@@ -37,9 +38,14 @@ Item {
     
     BaseDialog {
         id: debnotfound
-        notifyText: "A deb library could not be found. Please check apt log for details."
+        notifyText: "Missing deb libraries have been ignored. Please check apt log for details."
     }
-
+    
+    BaseDialog {
+        id: dependencyConflict
+        notifyText: "There is a dependency conflict with an existing download. Please try again later."
+    }
+    
     BaseDialog {
         id: readmePopup
         Component.onCompleted: {

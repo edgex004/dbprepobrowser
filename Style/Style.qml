@@ -8,8 +8,8 @@ QtObject {
     readonly  property color bg_color: Qt.lighter("#6bdce4", 0.8)
     readonly  property color selected_bg_color: Qt.lighter("#6bdce4", 0.4)
     readonly  property color text_color: "green"
-    readonly  property int bodyTextSize: 18
-    readonly  property int titleTextSize: 30
+    readonly  property int bodyTextSize: Qt.platform.os == "osx" ? 18 : 14
+    readonly  property int titleTextSize: Qt.platform.os == "osx" ? 30 : 24
     readonly  property string fontFamily: "Roboto"
 }
 

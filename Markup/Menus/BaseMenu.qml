@@ -13,6 +13,7 @@ Item {
     id: basemenu
     visible: inner_popup.visible
     focus: inner_popup.visible && !dialogManager.dialogOpen
+    default property alias children: cont.children;
     
     signal open()
     signal selected(string item)
@@ -59,18 +60,25 @@ Item {
         y: (parent.height - height) / 2
 
 
-
+ColumnLayout{
+    anchors.margins: Style.popup_margin    
+    width: parent.width
+    height: parent.height
         BodyText {
+            visible: text
             text: basemenu.instructions
+        }
+        
+        RowLayout{
+            id:cont
+            visible: children.length > 0
         }
 
         Rectangle {
-            anchors.margins: Style.popup_margin
-            anchors.fill: parent
+            Layout.fillHeight: true
+            Layout.fillWidth: true
             radius: Style.corner_radius
             color: Material.background
-
-
 
             ListView {
                 id: placeholder
@@ -115,5 +123,6 @@ Item {
         }
 
     }
-}
+        }
+    }
 }

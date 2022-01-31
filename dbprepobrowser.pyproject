@@ -12,6 +12,7 @@
     "Markup/Menus/InstallMenu.qml",
     "Markup/Menus/BaseMenu.qml",
     "Markup/Menus/TopLevelMenu.qml",
+    "Markup/Menus/ReadOnlyList.qml",
     "Markup/AppDetail.qml",
     "Markup/MyBusyIndicator.qml",
     "Markup/TitleText.qml",
