@@ -1,0 +1,23 @@
+[Desktop Entry]
+Version=0.1
+Type=Application
+Categories=Application;System Tools;
+Name=DBP Repo Browser
+Exec=dbprepobrowser.launch
+Icon=icon.png
+X-DBP-Screenshots[0]=preview1.png
+X-DBP-Screenshots[1]=preview2.png
+X-DBP-Screenshots[2]=preview3.png
+X-DBP-Screenshots[3]=preview4.png
+
+[Package Entry]
+Id=dbprepobrowser
+Name=dbprepobrowser
+Arch=armhf
+Exec=dbprepobrowser.launch
+Version=0.1
+Appdata=dbprepobrowser
+Icon=icon.png
+Dependency[deb]=libqt5core5a;
+Dependency[dbp]=dbpInstaller_sebt3;
+

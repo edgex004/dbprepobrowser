@@ -1,0 +1,10 @@
+#!/bin/bash
+
+cd $(dirname $0)
+export XDG_CONFIG_HOME=$(dirname $0)/conf
+mkdir -p $XDG_CONFIG_HOME
+export XDG_CACHE_HOME=$(dirname $0)/cache
+mkdir -p $XDG_CACHE_HOME
+export PYTHONPATH=$(dirname $0)/libs
+python3 dbprepobrowser/main.py "$@"
+
